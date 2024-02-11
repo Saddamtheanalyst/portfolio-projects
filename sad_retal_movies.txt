@@ -1,0 +1,145 @@
+The data analysis project focuses on examining various aspects of a video rental business. It involves analyzing data related to staff, store inventory, film categories, customers, rentals, and stakeholders (advisors and investors). Here's a summary of the project based on the queries:
+
+1. **Staff and Store Information**: The project starts by retrieving details about staff members, including their names, store IDs, and addresses, along with store-related information such as the inventory, rental rates, and replacement costs of films available in each store.
+
+2. **Inventory Analysis**: It then proceeds to analyze the inventory in each store, providing insights into the count of inventory items, film ratings, and the distribution of films across different ratings.
+
+3. **Film Categories and Costs**: The project delves into the film categories and their associated costs, examining the number of films in each category, average and total replacement costs, and their distribution across store locations.
+
+4. **Customer Information**: Next, it explores customer data, presenting details such as names, store IDs, addresses, and the status of their accounts (active or inactive).
+
+5. **Rental and Payment Analysis**: The project conducts an analysis of rentals and payments made by customers, highlighting the total number of rentals and the corresponding total payment amounts for each customer.
+
+6. **Stakeholder Information**: Finally, it includes information about stakeholders involved in the business, including advisors and investors, categorizing them into 'Advisers' or 'Investors' and providing their names and company affiliations where applicable.
+
+Overall, the project aims to provide comprehensive insights into various aspects of the video rental business, ranging from operational details like staff and inventory management to customer behavior and stakeholder involvement.
+
+
+
+-- Query 1: Staff and Store Information
+SELECT
+    s.first_name,
+    s.last_name,
+    s.store_id,
+    a.address,
+    a.district,
+    ct.city,
+    c.country
+FROM 
+    staff s 
+INNER JOIN 
+    address a ON s.address_id = a.address_id
+INNER JOIN 
+    city ct ON a.city_id = ct.city_id
+INNER JOIN 
+    country c ON ct.country_id = c.country_id;
+
+-- Query 2: Inventory Analysis
+SELECT
+    s.store_id,
+    i.inventory_id,
+    f.title,
+    f.rental_rate,
+    f.replacement_cost
+FROM 
+    store s
+INNER JOIN 
+    inventory i ON s.store_id = i.store_id
+INNER JOIN 
+    film f ON i.film_id = f.film_id;
+
+-- Query 3: Inventory and Film Ratings Analysis
+SELECT
+    s.store_id,
+    f.rating,
+    COUNT(i.inventory_id) AS count_of_inventory_items
+FROM 
+    store s
+INNER JOIN 
+    inventory i ON s.store_id = i.store_id
+INNER JOIN 
+    film f ON i.film_id = f.film_id
+GROUP BY
+    store_id,
+    rating
+ORDER BY 
+    store_id;
+
+-- Query 4: Film Categories and Costs
+SELECT
+    s.store_id,
+    c.name AS category_name,
+    COUNT(i.inventory_id) AS number_of_films,
+    AVG(f.replacement_cost) AS avg_replacement_cost,
+    SUM(f.replacement_cost) AS total_replacement_cost
+FROM 
+    film f
+LEFT JOIN 
+    inventory i ON i.film_id = f.film_id
+LEFT JOIN 
+    film_category fc ON f.film_id = fc.film_id
+LEFT JOIN 
+    category c ON fc.category_id = c.category_id
+GROUP BY
+    store_id,
+    c.name
+ORDER BY 
+    number_of_films DESC;
+
+-- Query 5: Customer Information
+SELECT
+    c.first_name,
+    c.last_name,
+    c.store_id,
+    CASE
+        WHEN c.active = 1 THEN 'Active'
+        ELSE 'Inactive'
+    END AS status,
+    a.address,
+    ct.city,
+    cn.country
+FROM 
+    customer c
+LEFT JOIN 
+    address a ON a.address_id = c.address_id
+LEFT JOIN 
+    city ct ON ct.city_id = a.city_id
+LEFT JOIN 
+    country cn ON cn.country_id = ct.country_id;
+
+-- Query 6: Rental and Payment Analysis
+SELECT
+    c.first_name,
+    c.last_name,
+    COUNT(r.rental_id) AS total_rental,
+    SUM(p.amount) AS total_amount
+FROM
+    customer c 
+LEFT JOIN 
+    rental r ON r.customer_id = c.customer_id
+LEFT JOIN 
+    payment p ON p.rental_id = r.rental_id
+GROUP BY 
+    first_name,
+    last_name
+ORDER BY 
+    total_amount DESC;
+
+-- Query 7: Stakeholder Information
+SELECT
+    'Adviser' AS type,
+    first_name,
+    last_name,
+    NULL AS company_name
+FROM
+    advisor
+
+UNION
+
+SELECT
+    'Investor' AS type,
+    first_name,
+    last_name,
+    company_name
+FROM
+    investor;
